@@ -8,6 +8,7 @@ Directory Structure:
 - Deployed outputs are in deploy/ . 
 - Training code in one_g.py . 
 - Deployment code in deploy notebook. 
+- Trained model file : PGSW/oneg/data/exps/default_config_epoch_200/model.pt
 
 ### Remaining Work
 - TODO : Detailed documentation : Snigdha
