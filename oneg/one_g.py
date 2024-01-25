@@ -29,14 +29,8 @@ class ToTensor(object):
 class WaterLevelDataset(torch.utils.data.Dataset):
     """Water Level dataset."""
 
-    def __init__(self, imgs, ann_imgs, transform=None,target_transform=None):
-        """
-        Arguments:
-            csv_file (string): Path to the csv file with annotations.
-            root_dir (string): Directory with all the images.
-            transform (callable, optional): Optional transform to be applied
-                on a sample.
-        """
+    def __init__(self, imgs, ann_imgs, transform=None):
+
         self.imgs = imgs
         self.ann_imgs = ann_imgs
         self.transform = transform
@@ -124,7 +118,7 @@ def train_model(args,dataset):
     #model = WTNet(num_channels = 15, filter_size = 15)
     model = WT3Net(num_channels = 10, filter_size = 7)
     criterion = nn.CrossEntropyLoss(reduction='none')
-    optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=0.05, weight_decay=0.001)
     max_epochs = args['max_epochs']
 
     for epoch_idx in range(max_epochs):
@@ -199,7 +193,7 @@ if __name__=="__main__":
         default="data/annotated_bmp",
         help="Path to the training data directory",
     )
-    parser.add_argument('--max_epochs',type=str,default=200)
+    parser.add_argument('--max_epochs',type=str,default=1000)
     parser.add_argument('-n','--namespace',
         type=str,
         default='default_exp')
