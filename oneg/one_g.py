@@ -17,13 +17,22 @@ class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
 
     def __call__(self, sample):
-        input, target = sample['input'], sample['target']
+        if 'target' in sample:
+            input, target = sample['input'], sample['target']
+            target = (target !=0).astype('int')
+        else:
+            input = sample['input']
+        
         input = input.transpose((2, 0, 1))
         input = input /255.0
-        target = (target !=0).astype('int')
 
-        return {'input': torch.from_numpy(input).float(),
+        if 'target' in sample:
+
+            return {'input': torch.from_numpy(input).float(),
                 'target': torch.from_numpy(target).float()}
+        else:
+            return {'input': torch.from_numpy(input).float()}
+
 
 
 class WaterLevelDataset(torch.utils.data.Dataset):
@@ -55,6 +64,14 @@ class WT3Net(nn.Module):
         self.conv1 = nn.Conv2d(3, num_channels, filter_size, padding='same')
         self.conv2 = nn.Conv2d(num_channels, num_channels, filter_size, padding='same')
         self.conv3 = nn.Conv2d(num_channels,1,1)
+        self.deploy_temperature = -1
+        self.deploy_flag = False
+
+    def set_deploy(self,deploy_flag,deploy_temperature):
+        # deploy flag to be set for tracing and onnxruntime. 
+        self.deploy_flag = deploy_flag
+        if self.deploy_flag:
+            self.deploy_temperature = deploy_temperature
 
     def forward(self, x):
         original_dim = x.dim()
@@ -66,8 +83,13 @@ class WT3Net(nn.Module):
         #print(x2.shape)
         x3 = x2.squeeze(1)
         #print(x3.shape)
+
+        if self.deploy_flag is True and self.deploy_temperature >0:
+            x3 = F.softmax(x3/self.deploy_temperature, dim = 1)
+
         if original_dim==3:
           x3 = x3.squeeze(0)
+
         return x3
 
 def get_annotation_mask(annotated):
@@ -185,12 +207,13 @@ def generate_output(dataset,model,outdir,T = 1e-2):
 
 
 if __name__=="__main__":
+    dir_path = os.path.dirname(os.path.realpath(__file__))
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--training_dir",
         type=Path,
-        default="data/annotated_bmp",
+        default=os.path.join(dir_path,"data/annotated_bmp"),
         help="Path to the training data directory",
     )
     parser.add_argument('--max_epochs',type=str,default=1000)
@@ -200,7 +223,7 @@ if __name__=="__main__":
 
     p = parser.parse_args()
     args = vars(p)
-    namespace_dir = os.path.join('data/exps',args['namespace'])
+    namespace_dir = os.path.join(dir_path,'data/exps',args['namespace'])
     if os.path.exists(namespace_dir):
         import shutil
         shutil.rmtree(namespace_dir, ignore_errors=True)
