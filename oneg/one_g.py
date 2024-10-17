@@ -216,7 +216,7 @@ if __name__=="__main__":
         default=os.path.join(dir_path,"data/annotated_bmp"),
         help="Path to the training data directory",
     )
-    parser.add_argument('--max_epochs',type=str,default=1000)
+    parser.add_argument('--max_epochs',type=str,default=50)
     parser.add_argument('-n','--namespace',
         type=str,
         default='default_exp')
