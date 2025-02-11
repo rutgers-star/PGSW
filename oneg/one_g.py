@@ -127,20 +127,13 @@ def pull_training_data(DATADIR):
 
 def train_model(args,dataset):
 
-    # transform = ToTensor()
-    # imgs,ann_imgs = pull_training_data(args['training_dir'])
-    # dataset = WaterLevelDataset(imgs[:14],ann_imgs[:14],transform = transform)
-    # test_dataset = WaterLevelDataset(imgs[14:],ann_imgs[14:],transform = transform)
-    # u = dataset[0]
-
-
     trainloader = torch.utils.data.DataLoader(dataset, batch_size=2,
                                             shuffle=True)
 
     #model = WTNet(num_channels = 15, filter_size = 15)
-    model = WT3Net(num_channels = 10, filter_size = 7)
+    model = WT3Net(num_channels = 10, filter_size = 4)
     criterion = nn.CrossEntropyLoss(reduction='none')
-    optimizer = optim.Adam(model.parameters(), lr=0.05, weight_decay=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=0.005, weight_decay=0.001)
     max_epochs = args['max_epochs']
 
     for epoch_idx in range(max_epochs):
@@ -208,18 +201,10 @@ def generate_output(dataset,model,outdir,T = 1e-2):
 
 if __name__=="__main__":
     dir_path = os.path.dirname(os.path.realpath(__file__))
-
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--training_dir",
-        type=Path,
-        default=os.path.join(dir_path,"data/annotated_bmp"),
-        help="Path to the training data directory",
-    )
+    parser.add_argument("--training_dir",type=Path,default=os.path.join(dir_path,"data/annotated_bmp"),help="Path to the training data directory",)
     parser.add_argument('--max_epochs',type=str,default=50)
-    parser.add_argument('-n','--namespace',
-        type=str,
-        default='default_exp')
+    parser.add_argument('-n','--namespace',type=str,default='default_exp')
 
     p = parser.parse_args()
     args = vars(p)
@@ -242,6 +227,4 @@ if __name__=="__main__":
 
     test_outp_dir =os.path.join(args['namespace_dir'],'test_figures')
     os.makedirs(test_outp_dir)
-    generate_output(test_dataset,model,
-                    outdir= test_outp_dir,
-                    T = 1e-2)
+    generate_output(test_dataset,model, outdir= test_outp_dir,T = 1e-2)
